@@ -1,0 +1,6 @@
+setup.py
+README.md
+__pycache__/
+build/
+custom_json_serializer.egg-info/
+dist/
