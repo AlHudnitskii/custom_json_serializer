@@ -1,6 +1,5 @@
 import datetime
 
-
 class custom_json_serializer:
     @staticmethod
     def serialize(obj):
@@ -30,6 +29,7 @@ class custom_json_serializer:
     @staticmethod
     def _escape_string(s):
         return s.replace('\\', '\\\\').replace('"', '\\"')
+
     @staticmethod
     def deserialize(s):
         s = s.strip()
@@ -43,14 +43,14 @@ class custom_json_serializer:
             return custom_json_serializer._unescape_string(s[1:-1])
         elif s.startswith('[') and s.endswith(']'):
             if len(s) > 2:
-                elements_str = s[1:-1].split(',')
+                elements_str = custom_json_serializer._split_top_level(s[1:-1])
                 elements = [custom_json_serializer.deserialize(elem.strip()) for elem in elements_str if elem.strip()]
                 return elements
             else:
                 return []
         elif s.startswith('{') and s.endswith('}'):
             if len(s) > 2:
-                pairs_str = s[1:-1].split(',')
+                pairs_str = custom_json_serializer._split_top_level(s[1:-1])
                 result = {}
                 for pair_str in pairs_str:
                     if ":" in pair_str:
@@ -78,3 +78,26 @@ class custom_json_serializer:
     @staticmethod
     def _unescape_string(s):
         return s.replace('\\"', '"').replace('\\\\', '\\')
+
+    @staticmethod
+    def _split_top_level(s):
+        """Разбивает строку на элементы верхнего уровня (для списков и объектов)."""
+        parts = []
+        current_part = ""
+        level = 0
+        in_string = False
+        for char in s:
+            if char == '"':
+                in_string = not in_string
+            elif not in_string:
+                if char == '[' or char == '{':
+                    level += 1
+                elif char == ']' or char == '}':
+                    level -= 1
+                elif char == ',' and level == 0:
+                    parts.append(current_part)
+                    current_part = ""
+                    continue
+            current_part += char
+        parts.append(current_part)
+        return parts
